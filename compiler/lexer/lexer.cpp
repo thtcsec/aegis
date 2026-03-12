@@ -87,10 +87,26 @@ Token Lexer::nextToken() {
         case ':':
             return Token(TokenType::COLON, ":", line_, column_ - 1);
         case '+':
+            if (match('='))
+                return Token(TokenType::PLUS_ASSIGN, "+=", line_, column_ - 2);
+            if (match('+'))
+                return Token(TokenType::INCREMENT, "++", line_, column_ - 2);
             return Token(TokenType::PLUS, "+", line_, column_ - 1);
+        case '-':
+            if (match('='))
+                return Token(TokenType::MINUS_ASSIGN, "-=", line_, column_ - 2);
+            if (match('-'))
+                return Token(TokenType::DECREMENT, "--", line_, column_ - 2);
+            if (match('>'))
+                return Token(TokenType::ARROW, "->", line_, column_ - 2);
+            return Token(TokenType::MINUS, "-", line_, column_ - 1);
         case '*':
+            if (match('='))
+                return Token(TokenType::STAR_ASSIGN, "*=", line_, column_ - 2);
             return Token(TokenType::STAR, "*", line_, column_ - 1);
         case '/':
+            if (match('='))
+                return Token(TokenType::SLASH_ASSIGN, "/=", line_, column_ - 2);
             return Token(TokenType::SLASH, "/", line_, column_ - 1);
         case '%':
             return Token(TokenType::PERCENT, "%", line_, column_ - 1);
@@ -136,14 +152,21 @@ bool Lexer::isAtEnd() const {
 }
 
 char Lexer::advance() {
+    char c = source_[pos_++];
     column_++;
-    return source_[pos_++];
+    return c;
 }
 
 char Lexer::peek() const {
     if (isAtEnd())
         return '\0';
     return source_[pos_];
+}
+
+char Lexer::peekNext() const {
+    if (pos_ + 1 >= source_.length())
+        return '\0';
+    return source_[pos_ + 1];
 }
 
 bool Lexer::match(char expected) {
@@ -163,6 +186,11 @@ void Lexer::skipWhitespace() {
             line_++;
             column_ = 0;
             advance();
+        } else if (c == '/' && peekNext() == '/') {
+            // A single-line comment goes until the end of the line.
+            while (!isAtEnd() && peek() != '\n') {
+                advance();
+            }
         } else {
             break;
         }
@@ -181,7 +209,14 @@ Token Lexer::identifier() {
     auto it = keywords.find(text);
     TokenType type = (it != keywords.end()) ? it->second : TokenType::IDENTIFIER;
 
-    return Token(type, text, line_, startCol);
+    if (type == TokenType::TRUE)
+        return Token(type, text, true, static_cast<uint32_t>(line_),
+                     static_cast<uint32_t>(startCol));
+    if (type == TokenType::FALSE)
+        return Token(type, text, false, static_cast<uint32_t>(line_),
+                     static_cast<uint32_t>(startCol));
+
+    return Token(type, text, static_cast<uint32_t>(line_), static_cast<uint32_t>(startCol));
 }
 
 Token Lexer::number() {
@@ -192,18 +227,71 @@ Token Lexer::number() {
         advance();
     }
 
+    bool isFloat = false;
+
+    // Look for a fractional part.
+    if (!isAtEnd() && peek() == '.') {
+        isFloat = true;
+        advance();  // Consume the "."
+
+        while (!isAtEnd() && std::isdigit(peek())) {
+            advance();
+        }
+    }
+
     std::string text = source_.substr(start, pos_ - start);
-    return Token(TokenType::INTEGER, text, line_, startCol);
+
+    if (isFloat) {
+        double val = std::stod(text);
+        return Token(TokenType::FLOAT_LITERAL, text, val, static_cast<uint32_t>(line_),
+                     static_cast<uint32_t>(startCol));
+    }
+
+    int64_t val = std::stoll(text);
+    return Token(TokenType::INT_LITERAL, text, val, static_cast<uint32_t>(line_),
+                 static_cast<uint32_t>(startCol));
 }
 
 Token Lexer::stringLiteral() {
     int start = pos_;
     int startCol = column_ - 1;
+    std::string value;
 
     while (!isAtEnd() && peek() != '"') {
-        if (peek() == '\n')
+        if (peek() == '\n') {
             line_++;
-        advance();
+            column_ = 0;
+        }
+
+        char c = advance();
+
+        // Handle escape sequences
+        if (c == '\\' && !isAtEnd()) {
+            char nextC = advance();
+            switch (nextC) {
+                case 'n':
+                    value += '\n';
+                    break;
+                case 't':
+                    value += '\t';
+                    break;
+                case 'r':
+                    value += '\r';
+                    break;
+                case '\\':
+                    value += '\\';
+                    break;
+                case '"':
+                    value += '"';
+                    break;
+                default:
+                    value += '\\';
+                    value += nextC;
+                    break;
+            }
+        } else {
+            value += c;
+        }
     }
 
     if (isAtEnd()) {
@@ -211,8 +299,8 @@ Token Lexer::stringLiteral() {
     }
 
     advance();  // closing "
-    std::string text = source_.substr(start, pos_ - start - 1);
-    return Token(TokenType::STRING_LITERAL, text, line_, startCol);
+    return Token(TokenType::STRING_LITERAL, value, value, static_cast<uint32_t>(line_),
+                 static_cast<uint32_t>(startCol));
 }
 
 }  // namespace aegis

@@ -19,6 +19,7 @@ private:
     bool isAtEnd() const;
     char advance();
     char peek() const;
+    char peekNext() const;
     bool match(char expected);
     void skipWhitespace();
 

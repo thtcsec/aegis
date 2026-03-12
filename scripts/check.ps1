@@ -21,15 +21,27 @@ Get-ChildItem -Include *.cpp,*.hpp -Recurse | ForEach-Object {
 Write-Host "Formatting check complete." -ForegroundColor Green
 
 Write-Host "--- 2. Configuring CMake ---" -ForegroundColor Cyan
-if (!(Test-Path build)) { New-Item -ItemType Directory -Path build }
-& cmake -B build -DCMAKE_BUILD_TYPE=Debug
+$hasCmake = $false
+try {
+    Get-Command "cmake" -ErrorAction Stop | Out-Null
+    $hasCmake = $true
+} catch {
+    $hasCmake = $false
+}
 
-Write-Host "--- 3. Building Aegis ---" -ForegroundColor Cyan
-& cmake --build build --config Debug
+if ($hasCmake) {
+    if (!(Test-Path build)) { New-Item -ItemType Directory -Path build }
+    & cmake -B build -DCMAKE_BUILD_TYPE=Debug
 
-Write-Host "--- 4. Running Tests ---" -ForegroundColor Cyan
-Set-Location build
-& ctest --output-on-failure
-Set-Location ..
+    Write-Host "--- 3. Building Aegis ---" -ForegroundColor Cyan
+    & cmake --build build --config Debug
 
-Write-Host "`nAll local checks PASSED! You are safe to push." -ForegroundColor Green
+    Write-Host "--- 4. Running Tests ---" -ForegroundColor Cyan
+    Set-Location build
+    & ctest --output-on-failure
+    Set-Location ..
+} else {
+    Write-Host "CMake not found on local machine. Skipping build and test phases. GitHub Actions CI will catch any errors." -ForegroundColor Yellow
+}
+
+Write-Host "`nAll local checks completed! You are safe to push." -ForegroundColor Green

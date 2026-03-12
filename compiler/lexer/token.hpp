@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include <variant>
 
@@ -7,23 +8,25 @@ namespace aegis {
 enum class TokenType {
     // Keywords
     FN,
-    INPUT,
-    QUERY,
-    EXECUTE,
+    LET,
+    MUT,
     IF,
+    ELSE,
     WHILE,
     FOR,
+    IN,
     RETURN,
     BREAK,
     CONTINUE,
-    LET,
-    MUT,
+    IMPORT,
+    INPUT,
+    QUERY,
+    EXECUTE,
     SCAN,
     SNIFF,
     CAPABILITY,
-    IMPORT,
 
-    // Type keywords
+    // Core Types & Qualifiers
     INT,
     FLOAT,
     BOOL,
@@ -37,17 +40,15 @@ enum class TokenType {
 
     // Literals
     IDENTIFIER,
-    INTEGER,
+    INT_LITERAL,
     FLOAT_LITERAL,
     STRING_LITERAL,
     TRUE,
     FALSE,
 
-    // Special keywords
+    // Special Keywords (DSL)
     SQL,
     COMMAND,
-    ELSE,
-    IN,
 
     // Operators
     PLUS,
@@ -56,6 +57,12 @@ enum class TokenType {
     SLASH,
     PERCENT,
     ASSIGN,
+    PLUS_ASSIGN,
+    MINUS_ASSIGN,
+    STAR_ASSIGN,
+    SLASH_ASSIGN,
+    INCREMENT,
+    DECREMENT,
     EQ,
     NE,
     LT,
@@ -85,14 +92,20 @@ enum class TokenType {
     INVALID
 };
 
+using Literal = std::variant<std::monostate, int64_t, double, std::string, bool>;
+
 struct Token {
     TokenType type;
     std::string lexeme;
-    int line;
-    int column;
+    Literal literal;
+    uint32_t line;
+    uint32_t column;
 
-    Token(TokenType t, std::string lex, int l, int c)
-        : type(t), lexeme(std::move(lex)), line(l), column(c) {}
+    Token(TokenType t, std::string lex, Literal lit, uint32_t l, uint32_t c)
+        : type(t), lexeme(std::move(lex)), literal(std::move(lit)), line(l), column(c) {}
+
+    Token(TokenType t, std::string lex, uint32_t l, uint32_t c)
+        : type(t), lexeme(std::move(lex)), literal(std::monostate{}), line(l), column(c) {}
 };
 
 }  // namespace aegis
