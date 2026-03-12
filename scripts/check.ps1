@@ -28,8 +28,8 @@ Write-Host "--- 3. Building Aegis ---" -ForegroundColor Cyan
 & cmake --build build --config Debug
 
 Write-Host "--- 4. Running Tests ---" -ForegroundColor Cyan
-cd build
+Set-Location build
 & ctest --output-on-failure
-cd ..
+Set-Location ..
 
 Write-Host "`nAll local checks PASSED! You are safe to push." -ForegroundColor Green
