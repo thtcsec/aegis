@@ -1,0 +1,39 @@
+// Taint analysis demonstration
+fn login_vulnerable(username: string) {
+    // This will trigger taint analysis warning
+    let user_data = input()
+    let query = "SELECT * FROM users WHERE name = " + user_data
+    execute query  // WARNING: tainted input in SQL query
+}
+
+fn login_secure(username: string) {
+    // This is safe - parameterized query
+    let user_data = input()
+    let query = sql("SELECT * FROM users WHERE name = ?", user_data)
+    let result = execute query
+    return result
+}
+
+fn command_vulnerable() {
+    let target = input()
+    let cmd = "ping " + target  // WARNING: command injection risk
+    execute cmd
+}
+
+fn command_secure() {
+    let target = input()
+    let cmd = command("ping", ["-c", "4", target])  // OK: array-based command
+    execute cmd
+}
+
+fn main() {
+    print("=== Taint Analysis Demo ===")
+    
+    // These will show compiler warnings
+    login_vulnerable("admin")
+    command_vulnerable()
+    
+    // These are safe
+    login_secure("admin")
+    command_secure()
+}

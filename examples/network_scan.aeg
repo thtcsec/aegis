@@ -1,0 +1,36 @@
+// Ví dụ về port scanning với Aegis
+import std.net
+import std.scan
+
+fn scan_single_port(target: string, port: int) {
+    if net.is_port_open(target, port) {
+        print("Port " + port + " is OPEN")
+    } else {
+        print("Port " + port + " is CLOSED")
+    }
+}
+
+fn scan_range(target: string, start: int, end: int) {
+    print("Scanning " + target + " from port " + start + " to " + end)
+    
+    for port in range(start, end) {
+        scan_single_port(target, port)
+    }
+}
+
+fn main() {
+    // Quét các port phổ biến
+    let target = "192.168.1.1"
+    
+    scan_single_port(target, 22)   // SSH
+    scan_single_port(target, 80)   // HTTP
+    scan_single_port(target, 443)  // HTTPS
+    scan_single_port(target, 3306) // MySQL
+    
+    // Quét range
+    scan_range(target, 1, 1024)
+    
+    // Sử dụng DSL syntax
+    scan "192.168.1.1" port 80
+    scan "192.168.1.1" ports 1..1024
+}

@@ -1,0 +1,55 @@
+# Aegis Project Configuration
+
+[project]
+name = "aegis"
+version = "0.1.0"
+authors = ["Trinh Hoang Tu <thtcsec>", "Aegis Foundation"]
+license = "Apache-2.0"
+repository = "https://github.com/thtcsec/aegis"
+
+[compiler]
+target = "x86_64"
+optimization = "debug"  # debug, release
+llvm_version = "14"
+
+[security]
+# Security analysis level: strict, normal, permissive
+level = "strict"
+
+# Fail compilation on security warnings
+fail_on_warning = true
+
+# Enable specific checks
+taint_analysis = true
+sql_injection_check = true
+command_injection_check = true
+path_traversal_check = true
+memory_safety = true
+
+[runtime]
+# Memory limits
+max_heap_size = "1GB"
+stack_size = "8MB"
+
+# Sandboxing
+enable_sandbox = true
+sandbox_network = false
+sandbox_filesystem = "read_only"
+
+[dependencies]
+# Standard library modules
+std_net = true
+std_crypto = true
+std_db = true
+std_exploit = true
+
+[build]
+# Output directory
+output_dir = "build"
+
+# Include debug symbols
+debug_symbols = true
+
+# Optimization flags
+optimize_size = false
+optimize_speed = true

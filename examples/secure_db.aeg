@@ -1,0 +1,64 @@
+// Ví dụ về database operations an toàn
+import std.db
+import std.crypto
+
+fn unsafe_query(username: string) {
+    // CẢNH BÁO: SQL Injection vulnerability
+    let user_input = input()
+    let query = "SELECT * FROM users WHERE username = '" + user_input + "'"
+    let result = db.execute(query)
+    return result
+}
+
+fn safe_query(username: string) {
+    // An toàn: sử dụng parameterized query
+    let user_input = input()
+    let query = sql("SELECT * FROM users WHERE username = ?", user_input)
+    let result = db.execute(query)
+    return result
+}
+
+fn create_user(username: string, password: string) {
+    // Hash password trước khi lưu
+    let password_hash = crypto.sha256(password)
+    
+    let query = sql(
+        "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+        username,
+        password_hash
+    )
+    
+    db.execute(query)
+}
+
+fn authenticate(username: string, password: string) -> bool {
+    let password_hash = crypto.sha256(password)
+    
+    let query = sql(
+        "SELECT * FROM users WHERE username = ? AND password_hash = ?",
+        username,
+        password_hash
+    )
+    
+    let result = db.execute(query)
+    
+    if result.count() > 0 {
+        return true
+    }
+    
+    return false
+}
+
+fn main() {
+    db.connect("postgresql://localhost/myapp")
+    
+    // Tạo user mới
+    create_user("admin", "secure_password_123")
+    
+    // Xác thực
+    if authenticate("admin", "secure_password_123") {
+        print("Login successful!")
+    } else {
+        print("Login failed!")
+    }
+}

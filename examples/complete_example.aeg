@@ -1,0 +1,75 @@
+// Complete Aegis example demonstrating all features
+import std.db
+import std.crypto
+import std.net
+
+capability network
+capability database
+
+fn main() {
+    // Explicit types
+    int port = 80
+    string host = "localhost"
+    bool secure = false
+    
+    // Type inference
+    let addr = host + ":" + to_string(port)
+    print(addr)
+    
+    // Collections
+    array<int> ports = [22, 80, 443]
+    map<string, int> config = {
+        "timeout": 30,
+        "retries": 3
+    }
+    
+    // Security example
+    authenticate_user()
+    
+    // Cybersecurity DSL
+    scan_network()
+}
+
+fn authenticate_user() {
+    print("=== Authentication ===")
+    
+    // Tainted input
+    tainted<string> username = input()
+    tainted<string> password = input()
+    
+    // Hash password
+    let password_hash = crypto.sha256(password)
+    
+    // Safe parameterized query
+    let query = sql(
+        "SELECT * FROM users WHERE username = ? AND password_hash = ?",
+        username,
+        password_hash
+    )
+    
+    let result = db.execute(query)
+    
+    if result.count() > 0 {
+        print("Login successful!")
+    } else {
+        print("Login failed!")
+    }
+}
+
+fn scan_network() {
+    print("=== Network Scanning ===")
+    
+    // DSL syntax for scanning
+    scan "192.168.1.1" port 80
+    scan "192.168.1.1" ports 1..1024
+    
+    // Traditional function call
+    let target = "192.168.1.1"
+    array<int> common_ports = [21, 22, 80, 443]
+    
+    for port in common_ports {
+        if net.is_port_open(target, port) {
+            print("Port " + to_string(port) + " is OPEN")
+        }
+    }
+}

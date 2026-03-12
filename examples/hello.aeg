@@ -1,0 +1,5 @@
+// Hello World in Aegis
+fn main() {
+    print("Hello, Aegis!")
+    print("A secure systems language with built-in security analysis")
+}
