@@ -1,0 +1,18 @@
+#!/bin/sh
+# Git pre-push hook to run local Aegis verification
+# This script is executed by 'git push' after it has updated the remote refs, but before any objects have been transferred.
+
+echo "--- Aegis Gatekeeper: Running pre-push local verification ---"
+powershell.exe -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/check.ps1"
+
+# Capture the exit code of the PowerShell script
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    echo "`n--- !!! LOCAL VERIFICATION FAILED !!! ---"
+    echo "Push aborted. Please fix the errors above before pushing."
+    exit 1
+fi
+
+echo "`nLocal verification passed. Proceeding with push..."
+exit 0
