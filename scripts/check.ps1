@@ -12,9 +12,11 @@ if (!(Test-Path $hookPath)) {
 }
 
 Write-Host "--- 1. Checking Code Formatting ---" -ForegroundColor Cyan
-# Find all .cpp and .hpp files and format them
+$clangFormat = "C:\Program Files\LLVM\bin\clang-format.exe"
+if (!(Test-Path $clangFormat)) { $clangFormat = "clang-format" } # Fallback to PATH
+
 Get-ChildItem -Include *.cpp,*.hpp -Recurse | ForEach-Object {
-    & "clang-format" -i $_.FullName
+    & $clangFormat -i $_.FullName
 }
 Write-Host "Formatting check complete." -ForegroundColor Green
 
