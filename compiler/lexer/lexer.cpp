@@ -134,10 +134,6 @@ Token Lexer::nextToken() {
             if (match('='))
                 return Token(TokenType::EQ, "==", line_, column_ - 2);
             return Token(TokenType::ASSIGN, "=", line_, column_ - 1);
-        case '-':
-            if (match('>'))
-                return Token(TokenType::ARROW, "->", line_, column_ - 2);
-            return Token(TokenType::MINUS, "-", line_, column_ - 1);
         case '.':
             if (match('.'))
                 return Token(TokenType::RANGE, "..", line_, column_ - 2);
